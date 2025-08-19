@@ -6,11 +6,13 @@
   <style>
     body { font-family: Arial, sans-serif; background: #0f172a; color: white; text-align: center; padding: 30px; }
     h1 { color: #38bdf8; }
-    form, .logs { background: #1e293b; padding: 20px; margin: 20px auto; border-radius: 12px; width: 400px; }
+    form, .logs { background: #1e293b; padding: 20px; margin: 20px auto; border-radius: 12px; width: 450px; }
     input, textarea { width: 90%; padding: 10px; margin: 10px 0; border-radius: 6px; border: none; }
     button { padding: 10px 20px; background: #38bdf8; border: none; color: black; font-weight: bold; border-radius: 6px; cursor: pointer; }
     button:hover { background: #0ea5e9; }
-    .log-item { background: #334155; padding: 10px; margin: 10px 0; border-radius: 6px; text-align: left; }
+    .log-item { background: #334155; padding: 10px; margin: 10px 0; border-radius: 6px; display: flex; align-items: center; }
+    .log-item img { width: 50px; height: 50px; border-radius: 50%; margin-right: 10px; }
+    .log-info { text-align: left; }
   </style>
 </head>
 <body>
@@ -33,24 +35,43 @@
     const form = document.getElementById("banForm")
     const logsList = document.getElementById("logsList")
 
+    async function fetchUserInfo(username) {
+      try {
+        const res = await fetch(`https://api.roblox.com/users/get-by-username?username=${username}`)
+        if (!res.ok) return null
+        const data = await res.json()
+        if (data && data.Id) {
+          return { id: data.Id, displayName: data.Username }
+        }
+        return null
+      } catch {
+        return null
+      }
+    }
+
     async function fetchLogs() {
       const pass = document.getElementById("adminPassword").value
       const res = await fetch("/logs", { headers: { "x-admin-password": pass } })
       if (!res.ok) return
       const bans = await res.json()
       logsList.innerHTML = ""
-      bans.forEach(ban => {
+      for (let ban of bans) {
+        const userInfo = await fetchUserInfo(ban.username)
         const div = document.createElement("div")
         div.className = "log-item"
+        const avatarUrl = userInfo ? `https://www.roblox.com/headshot-thumbnail/image?userId=${userInfo.id}&width=50&height=50&format=png` : ""
         div.innerHTML = `
-          <b>${ban.username}</b><br>
-          Motivo: ${ban.reason}<br>
-          Note: ${ban.notes}<br>
-          Durata: ${ban.duration}<br>
-          <button onclick="unban('${ban.username}')">Unban</button>
+          <img src="${avatarUrl}" alt="avatar">
+          <div class="log-info">
+            <b>${ban.username}</b> (${userInfo ? userInfo.displayName : "N/A"})<br>
+            Motivo: ${ban.reason}<br>
+            Note: ${ban.notes}<br>
+            Durata: ${ban.duration}<br>
+            <button onclick="unban('${ban.username}')">Unban</button>
+          </div>
         `
         logsList.appendChild(div)
-      })
+      }
     }
 
     async function unban(username) {
@@ -78,7 +99,7 @@
       fetchLogs()
     })
 
-    setInterval(fetchLogs, 3000)
+    setInterval(fetchLogs, 5000)
   </script>
 </body>
 </html>
