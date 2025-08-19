@@ -4,7 +4,7 @@ const path = require("path")
 const bodyParser = require("body-parser")
 const app = express()
 const PORT = 3000
-const ADMIN_PASSWORD = "SuperSecretAdminPassword123"
+const ADMIN_PASSWORD = "Tutuu666kMM32910"
 
 const bansFile = path.join(__dirname, "bans.json")
 
